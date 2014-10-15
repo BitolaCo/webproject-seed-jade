@@ -158,7 +158,9 @@ gulp.task("clean", function() {
 });
 
 gulp.task("build", function() {
-    runSequence("clean", ["less", "sass", "jade", "js:all", "images"], "html", ["css", "assets"]);
+    return runSequence("clean", ["less", "sass", "jade", "js:all", "images"], "html", ["css", "assets"]);
 });
 
-gulp.task("default", ["build", "watch"]);
+gulp.task("default", function() {
+    runSequence("build", "watch");
+});
