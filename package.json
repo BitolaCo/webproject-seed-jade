@@ -6,10 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository" :
-  {
-    "type" : "git",
-    "url" : "https://github.com/BitolaCo/webproject-seed-jade.git"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BitolaCo/webproject-seed-jade.git"
   },
   "author": "Brad Berger <brad@bradb.net>",
   "license": "MPL",
@@ -18,6 +17,7 @@
     "gulp": "^3.8.8",
     "gulp-autoprefixer": "^1.0.1",
     "gulp-changed": "^1.0.0",
+    "gulp-clean": "^0.3.1",
     "gulp-concat": "^2.4.1",
     "gulp-imagemin": "^1.0.1",
     "gulp-jade": "^0.9.0",
@@ -32,6 +32,7 @@
     "gulp-uglify": "^1.0.1",
     "gulp-uncss": "^0.5.0",
     "gulp-webserver": "^0.8.3",
-    "jshint-stylish": "^1.0.0"
+    "jshint-stylish": "^1.0.0",
+    "run-sequence": "^1.0.1"
   }
 }

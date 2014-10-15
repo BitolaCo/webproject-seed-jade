@@ -19,6 +19,8 @@ var gulp = require("gulp"),
     minifyHTML = require("gulp-minify-html"),
     glob = require("glob"),
     uncss = require("gulp-uncss"),
+    runSequence = require('run-sequence'),
+    clean = require('gulp-clean'),
     opts = {
         path: function(path) { return __dirname + (path.charAt(0) === "/" ? "" : "/") + path; },
         uncss: { html: glob.sync("app/**/*.html") },
@@ -26,6 +28,7 @@ var gulp = require("gulp"),
         html: { empty: true },
         autoprefixer: { browsers: ['last 2 versions'], cascade: true },
         css: { keepBreaks: false },
+        clean: {force: true},
         webserver: {
             livereload: true,
             directoryListing: false,
@@ -62,7 +65,7 @@ gulp.task("html", function() {
     var SRC = opts.path("src/html/**/*.html"),
         DEST = opts.path("app");
 
-    gulp.src(SRC)
+    return gulp.src(SRC)
         .pipe(changed(DEST))
         .pipe(minifyHTML(opts.html))
         .pipe(gulp.dest(DEST));
@@ -85,11 +88,22 @@ gulp.task("sass", function() {
     var SRC = opts.path("src/sass/**/*.scss"),
         DEST = opts.path("src/css");
 
-    gulp.src(SRC)
+    return gulp.src(SRC)
         .pipe(sass())
         .pipe(autoprefixer(opts.autoprefixer))
         .pipe(uncss(opts.uncss))
         .pipe(gulp.dest(DEST));
+});
+
+gulp.task("assets", function() {
+
+    var SRC = opts.path("src/assets/**/*"),
+        DEST = opts.path("app");
+
+    return gulp.src(SRC)
+        .pipe(changed(DEST))
+        .pipe(gulp.dest(DEST));
+
 });
 
 gulp.task("css", function() {
@@ -97,13 +111,11 @@ gulp.task("css", function() {
     var SRC = opts.path("src/css/**/*.css"),
         DEST = opts.path("app/css");
 
-    gulp.src(SRC)
-        .pipe(sourcemaps.init())
+    return gulp.src(SRC)
         .pipe(autoprefixer(opts.autoprefixer))
         .pipe(concat("app.css"))
         .pipe(uncss(opts.uncss))
         .pipe(minifyCSS(opts.css))
-        .pipe(sourcemaps.write())
         .pipe(gulp.dest(DEST));
 
 });
@@ -112,29 +124,41 @@ gulp.task("js:all", function() {
     var SRC = opts.path("src/js/**/*.js"),
         DEST = opts.path("app/js");
 
-    gulp.src(SRC)
+    return gulp.src(SRC)
         .pipe(uglify())
         .pipe(gulp.dest(DEST));
 
 });
 
 gulp.task("webserver", function() {
-    gulp.src(opts.path("app"))
+    return gulp.src(opts.path("app"))
         .pipe(webserver(opts.webserver));
 });
 
 gulp.task("test", ["jshint"]);
 
 gulp.task("watch", ["webserver"], function () {
-    gulp.watch(["src/html/**/*.html"], ["html"]);
+    gulp.watch(["src/html/**/*.html"], function() {
+        // Since the css task uses uncss, we should re-run
+        // it after changing html, since their related.
+        runSequence("html", "css");
+    });
     gulp.watch(["src/css/**/*.css"], ["css"]);
     gulp.watch(["src/less/**/*.less"], ["less"]);
     gulp.watch(["src/sass/**/*.scss"], ["sass"]);
     gulp.watch(["src/jade/**/*.jade"], ["jade"]);
-    gulp.watch(["src/js/**/*.jade"], ["js:all"]);
+    gulp.watch(["src/js/**/*.js"], ["js:all"]);
     gulp.watch(["src/img/**/*"], ["images"]);
+    gulp.watch(["src/assets/**/*"], ["assets"]);
 });
 
-gulp.task("build", ["js:all", "less", "sass", "images"]);
+gulp.task("clean", function() {
+    return gulp.src(opts.path("app"), {read: false})
+        .pipe(clean(opts.clean));
+});
+
+gulp.task("build", function() {
+    runSequence("clean", ["less", "sass", "jade", "js:all", "images"], "html", ["css", "assets"]);
+});
 
 gulp.task("default", ["build", "watch"]);
